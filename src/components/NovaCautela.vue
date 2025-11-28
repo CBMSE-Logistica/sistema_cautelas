@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
+import type { Material, Pessoa } from '../types';
 import {
     X,
     ShieldAlert,
@@ -10,6 +11,7 @@ import {
     User,
     Plus,
     Trash2,
+    LoaderCircle
 } from 'lucide-vue-next';
 
 // Props
@@ -17,23 +19,6 @@ const props = defineProps<{
     estaAberto: boolean;
     fecharModal: () => void;
 }>();
-
-// INTERFACES
-interface Pessoa {
-    id_pessoa: number;
-    nome: string;
-    matricula: string;
-    graduacao: string;
-    setor: string;
-    contato: string;
-}
-
-interface Material {
-    id_material: number;
-    nome: string;
-    numero_serie: string;
-    estado_conservacao: string;
-}
 
 // --- ESTADOS ---
 const carregando = ref(false);
@@ -59,12 +44,17 @@ const {
 
 // Cria uma lista dinâmica sem os itens já selecionados
 const materiaisDisponiveis = computed(() => {
-    return listaMateriais.value.filter(
-        (m) =>
-            !itensSelecionados.value.find(
-                (i) => i.id_material === m.id_material
-            )
+    return listaMateriais.value.filter(m => {
+    
+    const isStatusOk = m.status === 'DISPONIVEL';
+
+    const isNaoSelecionado = !itensSelecionados.value.some(
+      (itemSelecionado) => itemSelecionado.id_material === m.id_material
     );
+
+    // O item só entra na lista se passar nas duas regras
+    return isStatusOk && isNaoSelecionado;
+  })
 });
 
 const {
@@ -92,7 +82,7 @@ async function carregarDados() {
 
     const { data: materiais } = await supabaseClient
         .from('material')
-        .select('id_material, nome, numero_serie, estado_conservacao')
+        .select('id_material, nome, numero_serie, estado_conservacao, status')
         .order('nome');
 
     if (pessoas) listaBombeiros.value = pessoas as Pessoa[];
@@ -140,6 +130,14 @@ async function confirmarCautela() {
         return alert('Informe a data prevista para devolução!');
     }
 
+    if (!form.value.plantonista) {
+        return alert('Informe o nome do plantonista.');
+    }
+
+    if (!form.value.motivo) {
+        return alert('Descreva o motivo/missão da cautela');
+    }
+
     salvando.value = true;
 
     try {
@@ -160,11 +158,7 @@ async function confirmarCautela() {
         const itensParaInserir = itensSelecionados.value.map((item) => ({
             fk_id_cautela: cautelaCriada.id_cautela,
             fk_id_material: item.id_material,
-            quantidade_cautelada: 1,
-            /* VERIFICAR QUANTIDADE CAUTELADA
-            DEVE SER POSSIVEL CAUTELAR MAIS DE UM EQUIPAMENTO IGUAL
-            EX.: dois capacetes
-            */
+            quantidade_cautelada: 1
         }));
 
         const { error: erroItens } = await supabaseClient
@@ -210,6 +204,7 @@ onMounted(() => {
         <div
             class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-in"
         >
+            <!-- Header -> Nome do modal, breve descrição e botão para fechar -->
             <div
                 class="flex items-center justify-between p-6 border-b border-gray-100 shrink-0 bg-gray-50/50"
             >
@@ -245,11 +240,13 @@ onMounted(() => {
                 v-else
                 class="p-6 overflow-y-auto flex-1 space-y-6 scrollbar-thin"
             >
+                <!-- Campo de escolha do bombeiro responsável pela cautela -->
                 <div class="relative z-30">
                     <label class="block text-sm font-bold text-gray-800 mb-2"
                         >Bombeiro Responsável
-                        <span class="text-red-500">*</span></label
-                    >
+                        <span class="text-red-500">*</span>
+                    </label>
+
                     <div class="relative">
                         <div
                             v-if="buscandoBombeiro"
@@ -291,7 +288,7 @@ onMounted(() => {
 
                         <div
                             v-if="exibirBombeiroDrop && bombeirosFiltrados.length"
-                            class="absolute z-20 mt-1 w-full bg-white shadow-xl border border-gray-100 rounded-xl max-h-48 overflow-auto"
+                            class="absolute z-20 mt-1 w-full bg-white shadow-xl border border-gray-100 rounded-xl max-h-48 overflow-auto scrollbar-thin"
                         >
                             <button
                                 v-for="b in bombeirosFiltrados"
@@ -320,11 +317,12 @@ onMounted(() => {
                     </div>
                 </div>
 
+                <!-- Campo para adicionar equipamentos à cautela -->
                 <div class="relative z-20">
                     <label class="block text-sm font-bold text-gray-800 mb-2"
                         >Adicionar Equipamentos
-                        <span class="text-red-500">*</span></label
-                    >
+                        <span class="text-red-500">*</span>
+                    </label>
 
                     <div class="relative mb-3">
                         <div
@@ -352,7 +350,7 @@ onMounted(() => {
 
                         <div
                             v-if="exibirMaterialDrop && materiaisFiltrados.length"
-                            class="absolute z-20 mt-1 w-full bg-white shadow-xl border border-gray-100 rounded-xl max-h-48 overflow-auto"
+                            class="absolute z-20 mt-1 w-full bg-white shadow-xl border border-gray-100 rounded-xl max-h-48 overflow-auto scrollbar-thin"
                         >
                             <button
                                 v-for="m in materiaisFiltrados"
@@ -381,8 +379,7 @@ onMounted(() => {
                                             m.estado_conservacao === 'REGULAR',
                                         'bg-red-100 text-red-700':
                                             m.estado_conservacao === 'RUIM' ||
-                                            m.estado_conservacao ===
-                                                'INSERVIVEL',
+                                            m.estado_conservacao === 'INOPERAVEL',
                                     }"
                                 >
                                     {{ m.estado_conservacao }}
@@ -406,7 +403,7 @@ onMounted(() => {
                     >
                         <div
                             v-if="itensSelecionados.length === 0"
-                            class="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50"
+                            class="text-center mx-auto py-4 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/30"
                         >
                             Nenhum item adicionado ainda.
                         </div>
@@ -428,7 +425,7 @@ onMounted(() => {
                                 <div
                                     v-if="
                                         item.estado_conservacao === 'RUIM' ||
-                                        item.estado_conservacao === 'INSERVIVEL'
+                                        item.estado_conservacao === 'INOPERAVEL'
                                     "
                                     class="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-0.5 rounded text-[10px] font-bold border border-red-100"
                                 >
@@ -453,8 +450,9 @@ onMounted(() => {
                         <label
                             class="block text-sm font-bold text-gray-800 mb-2"
                             >Devolução Prevista
-                            <span class="text-red-500">*</span></label
-                        >
+                            <span class="text-red-500">*</span>
+                        </label>
+
                         <div class="relative">
                             <Calendar
                                 class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
@@ -469,8 +467,9 @@ onMounted(() => {
                     <div>
                         <label
                             class="block text-sm font-bold text-gray-800 mb-2"
-                            >Plantonista</label
-                        >
+                            >Plantonista
+                            <span class="text-red-500">*</span>
+                        </label>
                         <div class="relative">
                             <User
                                 class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -487,14 +486,19 @@ onMounted(() => {
 
                 <div>
                     <label class="block text-sm font-bold text-gray-800 mb-2"
-                        >Motivo / Missão</label
-                    >
+                        >Motivo / Missão
+                        <span class="text-red-500">*</span>
+                    </label>
                     <textarea
                         v-model="form.motivo"
                         rows="2"
                         class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm resize-none focus:border-red-600 focus:ring-2 focus:ring-red-600/10 transition text-gray-800"
                         placeholder="Ex: Ocorrência de incêndio florestal..."
                     ></textarea>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-red-500 text-sm" >* Campos obrigatórios</span>
+                    <span class="text-gray-500">Itens: <b class="text-gray-800">{{ itensSelecionados.length }}</b></span>
                 </div>
             </div>
 
@@ -505,7 +509,7 @@ onMounted(() => {
                     @click="fecharModal"
                     class="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition text-sm"
                     :disabled="salvando"
-                >
+                    >
                     Cancelar
                 </button>
                 <button
@@ -513,10 +517,13 @@ onMounted(() => {
                     :disabled="salvando"
                     class="px-5 py-2.5 rounded-xl font-bold text-white bg-green-700 hover:bg-green-800 transition shadow-lg shadow-green-700/20 active:scale-95 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <span v-if="salvando" class="animate-spin">⏳</span>
+                    <LoaderCircle v-if="salvando" class="w-4 h-4 animate-spin text-white"/>
                     {{ salvando ? 'Salvando...' : 'Confirmar Cautela' }}
                 </button>
+                
+                
             </div>
+
         </div>
     </div>
 </template>
