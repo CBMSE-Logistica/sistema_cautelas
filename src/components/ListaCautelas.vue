@@ -15,7 +15,7 @@ import {
 
 // --- ESTADOS ---
 const carregando = ref(true);
-const cautelas = ref<any[]>([]);
+const cautelas = ref<Cautela[]>([]);
 
 // --- BUSCAR DADOS ---
 async function carregarCautelas() {
@@ -41,7 +41,19 @@ async function carregarCautelas() {
     if (error) {
         console.error('Erro ao buscar cautelas: ', error);
     } else {
-        cautelas.value = (data || []);
+        cautelas.value = (data || []).map((c: any) => ({
+			id_cautela: c.id_cautela,
+			data_hora_retirada: c.data_hora_retirada,
+			data_previsao_devolucao: c.data_previsao_devolucao,
+			status: c.status,
+			motivo_cautela: c.motivo_cautela,
+			plantonista_rto: c.plantonista_rto,
+			responsavel: c.pessoa,
+			itens: c.itens?.map((i: any) => ({
+				...i.material,
+				quantidade_cautelada: i.quantidade_cautelada
+			}))
+		}));
     }
 
     carregando.value = false;
@@ -112,7 +124,7 @@ onMounted(() => {
 
         <div
             v-else
-            class="grid grid-cols-1 px-4 md:grid-cols-1 md:px-12 xl:grid-cols-2 gap-6"
+            class="grid grid-cols-1 px-4 md:grid-cols-1 md:px-12 xl:grid-cols-2 xl:px-4 gap-6"
         >
             <div
                 v-for="c in cautelas"
@@ -141,7 +153,7 @@ onMounted(() => {
                             class="flex items-center gap-2 text-gray-800 font-bold text-lg"
                         >
                             <User class="w-5 h-5 text-gray-400" />
-                            {{ c.pessoa.graduacao }} {{ c.pessoa.nome }}
+                            {{ c.responsavel.graduacao }} {{ c.responsavel.nome }}
                         </div>
                         <div class="text-xs text-gray-400 ml-7">
                             Protocolo #{{ c.id_cautela }}
@@ -174,7 +186,7 @@ onMounted(() => {
                     <ul class="space-y-2">
                         <li
                             v-for="item in c.itens"
-                            :key="item.material.id_material"
+                            :key="item.id_material"
                             class="text-sm text-gray-700 flex items-start gap-2"
                         >
                             <CornerDownRight
@@ -182,12 +194,12 @@ onMounted(() => {
                             />
                             <div>
                                 <span class="font-medium">{{
-                                    item.material.nome
+                                    item.nome
                                 }}</span>
                                 <span
                                     class="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded ml-2 font-mono"
                                 >
-                                    #{{ item.material.numero_serie }}
+                                    #{{ item.numero_serie }}
                                 </span>
                             </div>
                         </li>

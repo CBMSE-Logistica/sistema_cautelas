@@ -46,8 +46,8 @@ export interface Cautela {
   motivo_cautela: string
   plantonista_rto: string
   // JOINs (quando buscamos dados relacionados)
-  responsavel?: Pessoa 
-  itens?: Material[]
+  responsavel: Pessoa 
+  itens: Material[]
 }
 
 export interface ItemCautela {
