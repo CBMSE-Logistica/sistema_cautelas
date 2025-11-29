@@ -506,7 +506,7 @@ onMounted(() => {
                 class="p-5 border-t border-gray-100 bg-gray-50 shrink-0 flex justify-end gap-3"
             >
                 <button
-                    @click="fecharModal"
+                    @click="fecharModal(); limparFormulario()"
                     class="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition text-sm"
                     :disabled="salvando"
                     >
