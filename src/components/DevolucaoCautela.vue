@@ -5,6 +5,7 @@ import { useBusca } from '../composables/useBusca';
 import type {
     Cautela,
     Pessoa,
+    StatusCautela,
     StatusDisponibilidade,
     EstadoConservacao,
 } from '../types';
@@ -148,9 +149,10 @@ async function confirmarDevolucao() {
         if (erroDev) throw erroDev;
 
         // 2. ATUALIZAR STATUS DA CAUTELA -> FINALIZADA
+        const statusFinalizada: StatusCautela = 'FINALIZADA';
         const { error: erroCautela } = await supabaseClient
             .from('cautela')
-            .update({ status: 'FINALIZADA' })
+            .update({ status: statusFinalizada })
             .eq('id_cautela', props.cautela.id_cautela);
 
         if (erroCautela) throw erroCautela;

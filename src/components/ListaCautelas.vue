@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import type { Cautela } from '../types'; 
 import DevolucaoCautela from './DevolucaoCautela.vue';
@@ -7,16 +7,19 @@ import {
     Clock,
     Calendar,
     AlertTriangle,
+    Archive,
     CheckCircle2,
     User,
     Package,
     ChevronRight,
     CornerDownRight,
+    Layers
 } from 'lucide-vue-next';
 
 // --- ESTADOS ---
 const carregando = ref(true);
 const cautelas = ref<Cautela[]>([]);
+const filtroAtivo = ref<'todas' | 'abertas' | 'atrasadas' | 'finalizadas'>('todas');
 
 const modalDevolucaoAberto = ref(false)
 const cautelaParaDevolver = ref<Cautela | null>(null) // Guarda qual cautela foi clicada
@@ -28,18 +31,17 @@ async function carregarCautelas() {
     // Traz a Cautela + Dados do Bombeiro + Itens (e dentro do item, o nome do material)
     const { data, error } = await supabaseClient
         .from('cautela')
-        .select(
-            `
-		id_cautela,
-		data_hora_retirada,
-		data_previsao_devolucao,
-		status,
-		pessoa:fk_id_pessoa_responsavel ( id_pessoa, nome, graduacao ),
-		itens:item_cautela (quantidade_cautelada, 
-			material:fk_id_material ( id_material, nome, numero_serie )
-      )
-    `
-        )
+        .select(`
+            id_cautela,
+            data_hora_retirada,
+            data_previsao_devolucao,
+            status,
+            pessoa:fk_id_pessoa_responsavel ( id_pessoa, nome, graduacao ),
+            itens:item_cautela (quantidade_cautelada, 
+                material:fk_id_material ( id_material, nome, numero_serie )
+            ),
+            devolucao (data_hora_devolucao)
+        `)
         .order('data_previsao_devolucao', { ascending: true }); // Os mais urgentes primeiro
 
     if (error) {
@@ -53,10 +55,12 @@ async function carregarCautelas() {
 			motivo_cautela: c.motivo_cautela,
 			plantonista_rto: c.plantonista_rto,
 			responsavel: c.pessoa,
+            data_devolucao_real: c.devolucao?.[0]?.data_hora_devolucao,     
 			itens: c.itens?.map((i: any) => ({
 				...i.material,
 				quantidade_cautelada: i.quantidade_cautelada
-			}))
+			}),
+        )
 		}));
     }
 
@@ -64,7 +68,6 @@ async function carregarCautelas() {
 }
 
 function abrirDevolucao(c: any) {
-  // O Supabase retorna um objeto complexo, vamos garantir que ele tem o formato Cautela
   cautelaParaDevolver.value = c
   modalDevolucaoAberto.value = true
 }
@@ -75,14 +78,15 @@ function fecharDevolucao() {
 }
 
 function onDevolucaoSalva() {
-    carregarCautelas() // Recarrega a lista para sumir com o item devolvido
+    carregarCautelas() 
 }
-
 
 // --- UTILITÁRIOS ---
 
 // Formata Data: 2025-11-26 -> 26/11/2025
-function formatarData(dataISO: string) {
+function formatarData(dataISO: string | undefined | null) {
+    if (typeof dataISO !== 'string') return '--/--'
+
 	const data = new Date(dataISO);
     if (!dataISO || isNaN(data.getTime())) return '--/--';
     return data.toLocaleDateString('pt-BR');
@@ -109,6 +113,63 @@ function diasRestantes(previsao: string) {
     return `Vence em ${dias} dias`;
 }
 
+function getPesoOrdenacao(c: any) {
+    if (c.status === 'FINALIZADA') return 1;
+    
+    // Se não é finalizada, verifica se está atrasada
+    if (c.status === 'ATRASADA' || isAtrasado(c.data_previsao_devolucao)) return 3;
+    
+    // Se não está atrasada e está aberta
+    return 2;
+}
+
+// --- Filtra e Ordena ---
+const cautelasFiltradas = computed(() => {
+    
+    // 1. Faz a filtragem (Quem entra na lista?)
+    let lista = cautelas.value.filter(c => {
+        // Aba Finalizadas
+        if (filtroAtivo.value === 'finalizadas') {
+            return c.status === 'FINALIZADA';
+        }
+
+        const estaAtrasado = isAtrasado(c.data_previsao_devolucao);
+
+        // Aba Atrasadas
+        if(filtroAtivo.value === 'atrasadas') {
+            return c.status === 'ATRASADA' || (c.status === 'ABERTA' && estaAtrasado);
+        }
+
+        // Aba Em Dia
+        if(filtroAtivo.value === 'abertas') {
+            return c.status === 'ABERTA' && !estaAtrasado;
+        }
+
+        // Aba Todas
+        return true; 
+    });
+
+    // 2. Se for a aba "TODAS", aplica a ORDENAÇÃO POR PESO
+    if (filtroAtivo.value === 'todas') {
+        return [...lista].sort((a, b) => {
+            const pesoA = getPesoOrdenacao(a);
+            const pesoB = getPesoOrdenacao(b);
+            
+            // Ordenação Decrescente (Maior peso primeiro)
+            // Se os pesos forem iguais, mantém a ordem original (pelo ID/Data)
+            return pesoB - pesoA;
+        });
+    }
+
+    return lista;
+})
+
+function getCorCartao(c: any) {
+    if (c.status === 'FINALIZADA') return 'green';
+    if (isAtrasado(c.data_previsao_devolucao)) return 'red'
+    return 'blue';
+}
+
 onMounted(() => {
     carregarCautelas();
 });
@@ -116,6 +177,41 @@ onMounted(() => {
 
 <template>
     <div class="animate-fade-in pb-16">
+        <div class="flex p-1 bg-gray-200/50 rounded-xl my-12 w-fit md:w-fit mx-auto gap-1">
+            <button 
+                @click="filtroAtivo = 'todas'"
+                class="flex-1 md:flex-none px-5 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"
+                :class="filtroAtivo === 'todas' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            >
+                <Layers class="w-4 h-4" /> Todas
+            </button>
+            
+            <button 
+                @click="filtroAtivo = 'abertas'"
+                class="flex-1 md:flex-none px-5 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"
+                :class="filtroAtivo === 'abertas' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            >
+                <Clock class="w-4 h-4" /> Em Dia
+            </button>
+      
+
+            <button 
+                @click="filtroAtivo = 'atrasadas'"
+                class="flex-1 md:flex-none px-5 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"
+                :class="filtroAtivo === 'atrasadas' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            >
+                <AlertTriangle class="w-4 h-4" /> Atrasadas
+            </button>
+
+            <button 
+                @click="filtroAtivo = 'finalizadas'"
+                class="flex-1 md:flex-none px-5 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"
+                :class="filtroAtivo === 'finalizadas' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            >
+                <Archive class="w-4 h-4" /> Finalizadas
+            </button>
+        </div>
+
         <div
             v-if="carregando"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -127,8 +223,12 @@ onMounted(() => {
             ></div>
         </div>
 
+        <div v-if="carregando" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="i in 3" :key="i" class="bg-white h-48 rounded-xl border border-gray-100 animate-pulse"></div>
+        </div>
+
         <div
-            v-else-if="cautelas.length === 0"
+            v-else-if="cautelasFiltradas.length === 0"
             class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200"
         >
             <div
@@ -136,9 +236,17 @@ onMounted(() => {
             >
                 <CheckCircle2 class="w-8 h-8 text-green-600" />
             </div>
-            <h3 class="text-lg font-bold text-gray-700">Tudo em ordem!</h3>
-            <p class="text-gray-400 text-sm">
+            <h3 class="text-lg font-bold text-gray-700">Nenhuma cautela nesta aba!</h3>
+            <p 
+                v-if="filtroAtivo === 'abertas' || filtroAtivo === 'atrasadas'"
+                class="text-gray-400 text-sm">
                 Nenhum equipamento pendente de devolução.
+            </p>
+            <p 
+                v-else="filtroAtivo === 'finalizadas'"
+                class="text-gray-400 text-sm"
+            >
+                Não há cautelas finalizadas até o momento.
             </p>
         </div>
 
@@ -147,22 +255,22 @@ onMounted(() => {
             class="grid grid-cols-1 px-4 md:grid-cols-1 md:px-12 xl:grid-cols-2 xl:px-4 gap-6"
         >
             <div
-                v-for="c in cautelas"
+                v-for="c in cautelasFiltradas"
                 :key="c.id_cautela"
                 class="bg-white rounded-xl border shadow-sm transition hover:shadow-md group relative overflow-hidden flex flex-col"
-                :class="
-                    isAtrasado(c.data_previsao_devolucao)
-                        ? 'border-red-200'
-                        : 'border-gray-200'
-                "
+                :class="{
+                    'border-blue-200': getCorCartao(c) === 'blue',
+                    'border-red-200': getCorCartao(c) === 'red',
+                    'border-green-200': getCorCartao(c) === 'green'
+                }"
             >
                 <div
-                    class="absolute left-0 top-0 bottom-0 w-1.5"
-                    :class="
-                        isAtrasado(c.data_previsao_devolucao)
-                            ? 'bg-red-500'
-                            : 'bg-blue-500'
-                    "
+                    class="absolute left-0 top-0 bottom-0 w-1"
+                    :class="{
+                        'bg-blue-500': getCorCartao(c) === 'blue',
+                        'bg-red-500': getCorCartao(c) === 'red',
+                        'bg-green-500': getCorCartao(c) === 'green'
+                    }"
                 ></div>
 
                 <div
@@ -182,18 +290,30 @@ onMounted(() => {
 
                     <div
                         class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide flex items-center gap-1"
-                        :class="
-                            isAtrasado(c.data_previsao_devolucao)
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-blue-50 text-blue-700'
-                        "
+                        :class="{
+                            'bg-blue-50 text-blue-700': getCorCartao(c) === 'blue',
+                            'bg-red-50 text-red-700': getCorCartao(c) === 'red',
+                            'bg-green-50 text-green-700': getCorCartao(c) === 'green'
+                        }"
                     >
-                        <AlertTriangle
-                            v-if="isAtrasado(c.data_previsao_devolucao)"
-                            class="w-3 h-3"
-                        />
-                        <Clock v-else class="w-3 h-3" />
-                        {{ diasRestantes(c.data_previsao_devolucao) }}
+                        <div v-if="getCorCartao(c) === 'blue'"
+                            class="flex gap-1 items-centers"
+                        >
+                            <Clock class="w-3 h-3" />
+                            {{ diasRestantes(c.data_previsao_devolucao) }}
+                        </div>
+                        <div v-if="getCorCartao(c) === 'red'"
+                            class="flex gap-1 items-centers"
+                        >
+                            <AlertTriangle class="w-3 h-3" />
+                            {{ diasRestantes(c.data_previsao_devolucao) }}
+                        </div>
+                        <div v-if="getCorCartao(c) === 'green'"
+                            class="flex gap-1 items-centers"
+                        >
+                            <CheckCircle2 class="w-3 h-3" />
+                            Concluído
+                        </div>
                     </div>
                 </div>
 
@@ -236,18 +356,24 @@ onMounted(() => {
                         </div>
                         <div
                             class="flex items-center gap-1"
-                            :class="
-                                isAtrasado(c.data_previsao_devolucao)
-                                    ? 'text-red-600 font-bold'
-                                    : ''
-                            "
                         >
-                            <Calendar class="w-3 h-3" /> Devolução:
-                            {{ formatarData(c.data_previsao_devolucao) }}
+                            <Calendar class="w-3 h-3" />
+                            <span v-if="c.status === 'FINALIZADA'">
+                                Entregue: <b>{{ formatarData(c.data_devolucao_real) }}</b> 
+                            </span>
+                             <span v-else
+                                :class="{
+                                    'text-red-600 font-bold': getCorCartao(c) === 'red'
+                                }"
+                             >
+                                 Devolução Prevista: {{ formatarData(c.data_previsao_devolucao) }}
+                             </span>
                         </div>
                     </div>
 
-                    <button @click="abrirDevolucao(c)" 
+                    <button
+                        v-if="c.status !== 'FINALIZADA'" 
+                        @click="abrirDevolucao(c)" 
                         class="bg-white border border-gray-200 text-gray-600 hover:text-green-700 hover:border-green-300 hover:bg-green-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1"
                         title="Registrar Devolução"
                     >

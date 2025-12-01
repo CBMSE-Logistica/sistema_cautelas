@@ -48,6 +48,7 @@ export interface Cautela {
   // JOINs (quando buscamos dados relacionados)
   responsavel: Pessoa 
   itens: Material[]
+  data_devolucao_real?: string
 }
 
 export interface ItemCautela {

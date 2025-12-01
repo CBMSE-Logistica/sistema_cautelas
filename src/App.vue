@@ -89,7 +89,7 @@ onMounted(() => {
 
         <main class="max-w-7xl mx-auto bg-gray-50">
             <div
-                class="flex items-center justify-between gap-3 w-full md:w-auto mx-8"
+                class="flex items-center justify-between gap-3 w-full md:w-auto mx-8 lg:mx-4"
             >
                 <div class="flex flex-row gap-3">
                     <div class="relative w-full md:w-64 group">
@@ -171,7 +171,7 @@ onMounted(() => {
                 </button>
             </div>
 
-            <div v-if="abaAtiva === 'inventario'" class="animate-fade-in">
+            <div v-if="abaAtiva === 'inventario'" class="animate-fade-in mx-8 lg:mx-4">
                 <div
                     v-if="carregando"
                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
