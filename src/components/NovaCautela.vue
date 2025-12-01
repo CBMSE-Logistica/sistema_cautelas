@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
-import type { Material, Pessoa } from '../types';
+import type { Material, Pessoa , StatusCautela} from '../types';
 import {
     X,
     ShieldAlert,
@@ -20,9 +20,12 @@ const props = defineProps<{
     fecharModal: () => void;
 }>();
 
+const emit = defineEmits(['cautela-salva'])
+
 // --- ESTADOS ---
 const carregando = ref(false);
 const salvando = ref(false);
+const dataInputRef = ref<HTMLInputElement | null>(null)
 
 // Lista gerais
 const listaBombeiros = ref<Pessoa[]>([]);
@@ -117,6 +120,10 @@ function fecharComDelay(tipo: 'bombeiro' | 'material') {
     }, 200);
 }
 
+function abrirCalendario() {
+    dataInputRef.value?.showPicker()
+}
+
 async function confirmarCautela() {
     if (!bombeiroSelecionado.value) {
         return alert('Selecione um bombeiro responsável!');
@@ -141,15 +148,18 @@ async function confirmarCautela() {
     salvando.value = true;
 
     try {
+        const statusInicial: StatusCautela = 'ABERTA';
+        const novaCautela = {
+            fk_id_pessoa_responsavel: bombeiroSelecionado.value.id_pessoa,
+            plantonista_rto: form.value.plantonista,
+            motivo_cautela: form.value.motivo,
+            data_previsao_devolucao: form.value.dataDevolucao,
+            status: statusInicial,
+        }
+
         const { data: cautelaCriada, error: erroCautela } = await supabaseClient
             .from('cautela')
-            .insert({
-                fk_id_pessoa_responsavel: bombeiroSelecionado.value.id_pessoa,
-                plantonista_rto: form.value.plantonista,
-                motivo_cautela: form.value.motivo,
-                data_previsao_devolucao: form.value.dataDevolucao,
-                status: 'ABERTA',
-            })
+            .insert(novaCautela)
             .select()
             .single();
 
@@ -455,12 +465,14 @@ onMounted(() => {
 
                         <div class="relative">
                             <Calendar
-                                class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                                @click="abrirCalendario"
+                                class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
                             />
                             <input
+                                ref="dataInputRef"
                                 type="date"
                                 v-model="form.dataDevolucao"
-                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm text-gray-800 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 transition "
+                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm text-gray-800 focus:border-red-600 focus:ring-2 focus:ring-red-600/10 transition"
                             />
                         </div>
                     </div>
@@ -554,4 +566,17 @@ onMounted(() => {
 .scrollbar-thin::-webkit-scrollbar-track {
     background: #f3f4f6; /* gray-100 */
 }
+
+/* input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+} */
 </style>

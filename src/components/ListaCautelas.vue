@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
-import type { Cautela } from '../types'; // Importando tipos centralizados
+import type { Cautela } from '../types'; 
+import DevolucaoCautela from './DevolucaoCautela.vue';
 import {
     Clock,
     Calendar,
@@ -16,6 +17,9 @@ import {
 // --- ESTADOS ---
 const carregando = ref(true);
 const cautelas = ref<Cautela[]>([]);
+
+const modalDevolucaoAberto = ref(false)
+const cautelaParaDevolver = ref<Cautela | null>(null) // Guarda qual cautela foi clicada
 
 // --- BUSCAR DADOS ---
 async function carregarCautelas() {
@@ -58,6 +62,22 @@ async function carregarCautelas() {
 
     carregando.value = false;
 }
+
+function abrirDevolucao(c: any) {
+  // O Supabase retorna um objeto complexo, vamos garantir que ele tem o formato Cautela
+  cautelaParaDevolver.value = c
+  modalDevolucaoAberto.value = true
+}
+
+function fecharDevolucao() {
+    modalDevolucaoAberto.value = false
+    cautelaParaDevolver.value = null
+}
+
+function onDevolucaoSalva() {
+    carregarCautelas() // Recarrega a lista para sumir com o item devolvido
+}
+
 
 // --- UTILITÁRIOS ---
 
@@ -227,7 +247,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <button
+                    <button @click="abrirDevolucao(c)" 
                         class="bg-white border border-gray-200 text-gray-600 hover:text-green-700 hover:border-green-300 hover:bg-green-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1"
                         title="Registrar Devolução"
                     >
@@ -236,6 +256,13 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+
+        <DevolucaoCautela 
+            :estaAberto="modalDevolucaoAberto"
+            :fecharModal="fecharDevolucao"
+            :cautela="cautelaParaDevolver"
+            @devolucao-salva="onDevolucaoSalva"
+        />
     </div>
 </template>
 

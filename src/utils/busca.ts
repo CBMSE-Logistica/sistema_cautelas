@@ -11,14 +11,17 @@ export function fuzzySearch<T>(
   list: T[], 
   term: string, 
   keys: string[], 
-  threshold = 0.4
+  threshold = 0.2
 ): T[] {
   if (!term) return list;
 
   const options: IFuseOptions<T > = {
     keys: keys,
     threshold: threshold,
-    ignoreLocation: true // Procura no texto todo, não só no começo
+    ignoreLocation: false,
+    location: 0,
+    distance: 100,
+    
   };
 
   const fuse = new Fuse(list, options);
