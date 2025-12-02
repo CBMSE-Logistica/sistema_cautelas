@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
+import { useScrollLock } from '../composables/useScrollLock';
 import type {
     Cautela,
     Pessoa,
@@ -189,6 +190,8 @@ async function confirmarDevolucao() {
         salvando.value = false;
     }
 }
+
+useScrollLock(() => props.estaAberto);
 </script>
 
 <template>
@@ -197,7 +200,7 @@ async function confirmarDevolucao() {
         class="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4 backdrop-blur-sm transition-opacity"
     >
         <div
-            class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-in"
+            class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-in scroll"
         >
             <div
                 class="flex items-center justify-between p-6 border-b border-gray-100 shrink-0 bg-gray-50/50"

@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
 import type { Material, Pessoa , StatusCautela} from '../types';
+import { useScrollLock } from '../composables/useScrollLock';
 import {
     X,
     ShieldAlert,
@@ -204,6 +205,8 @@ function limparFormulario() {
 onMounted(() => {
     carregarDados();
 });
+
+useScrollLock(() => props.estaAberto);
 </script>
 
 <template>
@@ -554,29 +557,4 @@ onMounted(() => {
 .animate-scale-in {
     animation: scale-in 0.2s ease-out;
 }
-
-.scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    background: #f3f4f6; /* gray-100 */
-}
-.scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #9ca3af; /* gray-400 */
-    border-radius: 8px;
-}
-.scrollbar-thin::-webkit-scrollbar-track {
-    background: #f3f4f6; /* gray-100 */
-}
-
-/* input[type="date"]::-webkit-calendar-picker-indicator {
-  background: transparent;
-  bottom: 0;
-  color: transparent;
-  cursor: pointer;
-  height: auto;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: auto;
-} */
 </style>
