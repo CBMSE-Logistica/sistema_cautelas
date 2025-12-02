@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { supabaseClient } from './supabase/supabaseClient';
 import { useBusca } from './composables/useBusca';
 import {
@@ -9,10 +9,17 @@ import {
     Box,
     LayoutGrid,
     ClipboardList,
+    LogOut,
 } from 'lucide-vue-next';
 import type { Material } from './types';
 import NovaCautela from './components/NovaCautela.vue';
 import ListaCautelas from './components/ListaCautelas.vue';
+import Login from './components/Login.vue';
+
+// Estado de sessão
+const sessao = ref<any>(null);
+const usuarioEmail = ref('');
+const appPronto = ref(false);
 
 // Estados
 const materiais = ref<Material[]>([]);
@@ -26,7 +33,60 @@ const {
     estaBuscando,
 } = useBusca(materiais, ['nome', 'numero_serie', 'estado_conservacao']);
 
-// Função para buscar dados do Supabase
+// --- FUNÇÕES DE AUTENTICAÇÃO ---
+let authSubscription: any = null;
+
+async function verificarUsuario() {
+    try {
+        const { data } = await supabaseClient.auth.getSession();
+        sessao.value = data.session;
+        if (sessao.value) {
+            usuarioEmail.value = sessao.value.user.email || '';
+            buscarMateriais();
+        }
+
+        const response = supabaseClient.auth.onAuthStateChange(
+            (_event, _session) => {
+                sessao.value = _session;
+
+                if (_session) {
+                    usuarioEmail.value = _session.user.email || '';
+                    if (materiais.value.length === 0) buscarMateriais();
+                } else {
+                    materiais.value = [];
+                    abaAtiva.value = 'inventario';
+                }
+            }
+        );
+
+        authSubscription = response.data.subscription;
+    } catch (error) {
+        console.error('Erro na auth:', error);
+    } finally {
+        appPronto.value = true;
+    }
+}
+
+onUnmounted(() => {
+    if (authSubscription) {
+        authSubscription.unsubscribe();
+    }
+});
+
+async function handleLogout() {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        console.error('Erro ao sair:', error);
+    }
+
+    sessao.value = null;
+    materiais.value = [];
+    abaAtiva.value = 'inventario';
+}
+// ------
+
+// --- FUNÇÕES DO SISTEMA ---
 async function buscarMateriais() {
     carregando.value = true;
     const { data, error } = await supabaseClient
@@ -56,34 +116,54 @@ function onCautelaCriada() {
     buscarMateriais();
     abaAtiva.value = 'emprestimos';
 }
+// ------
 
-// Inicialização
 onMounted(() => {
-    buscarMateriais();
+    verificarUsuario();
+    if (sessao.value) buscarMateriais();
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50 font-inter">
+    <Login v-if="!sessao" />
+
+    <div v-else class="min-h-screen bg-gray-50 font-inter">
         <header
-            class="w-full py-4 px-16 mb-8 flex flex-col md:flex-row md:items-center gap-4 bg-white shadow-md"
+            class="w-full py-4 px-16 mb-8 flex flex-col md:flex-row md:items-center gap-4 bg-white shadow-md justify-between"
         >
-            <picture class="w-16 h-16">
-                <img src="./assets/Logo-CBMSE-1.png" alt="" />
-            </picture>
-            <div class="flex flex-col">
-                <h1
-                    class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight"
-                >
-                    CBM-SE <span class="text-red-700">Logística</span>
-                </h1>
-                <p class="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                    Sistema de Controle de Cautelas
-                    <span
-                        class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold"
-                        >Online</span
+            <div class="flex flex-row gap-3 items-center p-2">
+                <picture class="w-16 h-16">
+                    <img src="./assets/Logo-CBMSE-1.png" alt="" />
+                </picture>
+                <div class="flex flex-col">
+                    <h1
+                        class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight"
                     >
-                </p>
+                        CBM-SE <span class="text-red-700">Logística</span>
+                    </h1>
+                    <p
+                        class="text-gray-500 text-sm mt-1 flex items-center gap-2"
+                    >
+                        Sistema de Controle de Cautelas
+                        <span
+                            class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold"
+                            >Online</span
+                        >
+                    </p>
+                </div>
+            </div>
+            <div class="text-gray-500 text-sm mt-1 flex items-center gap-2">
+                <span
+                    >Plantonista:
+                    <b class="text-gray-800">{{ usuarioEmail }}</b></span
+                >
+                <button
+                    @click="handleLogout"
+                    class="bg-white border border-gray-200 text-gray-600 hover:text-red-700 hover:border-red-200 p-2.5 rounded-xl transition shadow-sm"
+                    title="Sair do Sistema"
+                >
+                    <LogOut class="w-5 h-5 text-gray-800" />
+                </button>
             </div>
         </header>
 
@@ -171,7 +251,10 @@ onMounted(() => {
                 </button>
             </div>
 
-            <div v-if="abaAtiva === 'inventario'" class="animate-fade-in mx-8 lg:mx-4">
+            <div
+                v-if="abaAtiva === 'inventario'"
+                class="animate-fade-in mx-8 lg:mx-4"
+            >
                 <div
                     v-if="carregando"
                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -261,7 +344,24 @@ onMounted(() => {
         <NovaCautela
             :estaAberto="estaAberto"
             :fecharModal="fecharModal"
+            :usuarioLogado="usuarioEmail"
             @cautela-salva="onCautelaCriada"
         />
     </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
