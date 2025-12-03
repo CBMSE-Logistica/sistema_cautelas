@@ -26,7 +26,7 @@ export interface Pessoa {
   nome: string
   matricula: string
   graduacao: string
-  unidade?: string // Opcional, pois nem sempre buscamos
+  unidade?: string
   contato?: string
 }
 
@@ -34,15 +34,28 @@ export interface Material {
   id_material: number
   nome: string
   numero_serie: string
-  estado_conservacao: EstadoConservacao // Tipagem forte aqui
-  status: StatusDisponibilidade // Tipagem forte aqui
+  estado_conservacao: EstadoConservacao 
+  status: StatusDisponibilidade 
+
+  // Relacionamento com o catálogo
+  catalogo?: CatalogoEquipamento
+  fk_catalogo?: number
+}
+
+export interface CatalogoEquipamento {
+  id: number
+  nome: string 
+  descricao?: string
+  // --- Campos calculados
+  total_itens?: number
+  total_disponivel?: number
 }
 
 export interface Cautela {
   id_cautela: number
   data_hora_retirada: string
   data_previsao_devolucao: string
-  status: StatusCautela // Tipagem forte aqui
+  status: StatusCautela 
   motivo_cautela: string
   plantonista_rto: string
   // JOINs (quando buscamos dados relacionados)
