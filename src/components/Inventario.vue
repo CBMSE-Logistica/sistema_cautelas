@@ -87,7 +87,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="animate-fade-in">
+    <div class="animate-fade-in pb-8">
         <div
             class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 p-2"
         >
