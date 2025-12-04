@@ -24,6 +24,7 @@ export type EstadoConservacao =
 export interface Pessoa {
   id_pessoa: number
   nome: string
+  cpf: string
   matricula: string
   graduacao: string
   unidade?: string

@@ -3,11 +3,21 @@ import { ref, onMounted } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
 import type { CatalogoEquipamento } from '../types';
-import { Box, RefreshCw, Search, Loader2, PackageOpen } from 'lucide-vue-next';
+import {
+    Box,
+    RefreshCw,
+    Search,
+    Loader2,
+    PackageOpen,
+    Plus,
+} from 'lucide-vue-next';
+import GerenciarInventario from './GerenciarInventario.vue';
 
 // --- ESTADOS ---
 const carregando = ref(true);
 const catalogoLista = ref<CatalogoEquipamento[]>([]);
+const modalGestaoAberto = ref(false);
+const catalogoSelecionado = ref<CatalogoEquipamento | null>(null);
 
 // --- BUSCA INTELIGENTE ---
 const {
@@ -52,6 +62,25 @@ async function buscarInventario() {
     carregando.value = false;
 }
 
+// --- FUNÇÕES DE GESTÃO (CRUD) ---
+function abrirNovoCadastro() {
+    catalogoSelecionado.value = null; // Null = Modo Criação
+    modalGestaoAberto.value = true;
+}
+
+function abrirEdicao(cat: CatalogoEquipamento) {
+    catalogoSelecionado.value = cat; // Objeto = Modo Edição
+    modalGestaoAberto.value = true;
+}
+
+function fecharGestao() {
+    modalGestaoAberto.value = false;
+}
+
+function aoAtualizarCatalogo() {
+    buscarInventario(); // Recarrega a lista principal para atualizar as contagens
+}
+
 onMounted(() => {
     buscarInventario();
 });
@@ -74,7 +103,13 @@ onMounted(() => {
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 w-full md:w-auto">
+            <div class="flex items-center gap-2 w-full mt-4 md:w-auto">
+                <button
+                    @click="abrirNovoCadastro"
+                    class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition ml-2"
+                >
+                    <Plus class="w-4 h-4 text-white" /> Novo
+                </button>
                 <div class="relative w-full md:w-72 group">
                     <Loader2
                         v-if="estaBuscando"
@@ -139,6 +174,7 @@ onMounted(() => {
             <div
                 v-for="cat in catalogoFiltrado"
                 :key="cat.id"
+                @click="abrirEdicao(cat)"
                 class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-red-200 transition duration-300 group cursor-pointer flex flex-col justify-between h-full"
             >
                 <div>
@@ -180,11 +216,22 @@ onMounted(() => {
                             {{ cat.total_disponivel }}
                         </span>
                         <span class="text-gray-400 mx-1">/</span>
-                        <span class="font-bold" title="Número total existente">{{ cat.total_itens }}</span>
+                        <span
+                            class="font-bold"
+                            title="Número total existente"
+                            >{{ cat.total_itens }}</span
+                        >
                     </div>
                 </div>
             </div>
         </div>
+
+        <GerenciarInventario
+            :estaAberto="modalGestaoAberto"
+            :fecharModal="fecharGestao"
+            :catalogo="catalogoSelecionado"
+            @atualizar-lista="aoAtualizarCatalogo"
+        />
     </div>
 </template>
 

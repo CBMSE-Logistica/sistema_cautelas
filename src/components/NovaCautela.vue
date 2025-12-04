@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
 import type { Material, Pessoa , StatusCautela} from '../types';
@@ -201,6 +201,12 @@ function limparFormulario() {
         observacoes: '',
     };
 }
+
+watch(() => props.estaAberto, (estaAberto) => {
+    if(estaAberto) {
+        carregarDados()
+    }
+})
 
 onMounted(() => {
     carregarDados();
