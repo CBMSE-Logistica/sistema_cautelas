@@ -27,8 +27,8 @@ export interface Pessoa {
   cpf: string
   matricula: string
   graduacao: string
-  unidade?: string
-  contato?: string
+  unidade: string
+  contato: string
 }
 
 export interface Material {

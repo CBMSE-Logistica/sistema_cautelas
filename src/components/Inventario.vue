@@ -7,7 +7,6 @@ import {
     Box,
     RefreshCw,
     Search,
-    Loader2,
     PackageOpen,
     Plus,
 } from 'lucide-vue-next';
@@ -23,7 +22,6 @@ const catalogoSelecionado = ref<CatalogoEquipamento | null>(null);
 const {
     termoBusca,
     resultados: catalogoFiltrado,
-    estaBuscando,
 } = useBusca(catalogoLista, ['nome', 'descricao']);
 
 // --- FETCH DADOS ---
@@ -107,16 +105,12 @@ onMounted(() => {
                 <button
                     @click="abrirNovoCadastro"
                     class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition ml-2"
+                    title="Adicionar novo tipo de equipamento"
                 >
                     <Plus class="w-4 h-4 text-white" /> Novo
                 </button>
                 <div class="relative w-full md:w-72 group">
-                    <Loader2
-                        v-if="estaBuscando"
-                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-600 animate-spin"
-                    />
                     <Search
-                        v-else
                         class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-red-600 transition"
                     />
 

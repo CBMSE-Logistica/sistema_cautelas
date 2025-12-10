@@ -5,8 +5,13 @@ import NovaCautela from './components/NovaCautela.vue';
 import ListaCautelas from './components/ListaCautelas.vue';
 import Login from './components/Login.vue';
 import Inventario from './components/Inventario.vue';
+import ListaBombeiros from './components/ListaBombeiros.vue';
 import {
-    Plus, LayoutGrid, ClipboardList, LogOut
+    Plus,
+    LayoutGrid,
+    ClipboardList,
+    LogOut,
+    Users,
 } from 'lucide-vue-next';
 
 // Estado de sessão
@@ -17,7 +22,7 @@ let authSubscription: any = null;
 
 // Estados
 const estaAberto = ref(false);
-const abaAtiva = ref<'inventario' | 'emprestimos'>('inventario');
+const abaAtiva = ref<'inventario' | 'emprestimos' | 'equipe'>('inventario');
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
 async function verificarUsuario() {
@@ -92,7 +97,7 @@ onMounted(() => {
             <p class="text-gray-500 font-bold">Carregando sistema...</p>
         </div>
     </div>
-    
+
     <div v-else>
         <Login v-if="!sessao" />
 
@@ -121,10 +126,12 @@ onMounted(() => {
                         </p>
                     </div>
                 </div>
-                <hr class="md:hidden text-gray-200">
-                <div class="text-gray-500 text-sm flex justify-between items-center gap-8 px-2">
+                <hr class="md:hidden text-gray-200" />
+                <div
+                    class="text-gray-500 text-sm flex justify-between items-center gap-8 px-2"
+                >
                     <span class="flex flex-col"
-                        >Plantonista: 
+                        >Plantonista:
                         <b class="text-gray-800">{{ usuarioEmail }}</b>
                     </span>
                     <button
@@ -136,8 +143,7 @@ onMounted(() => {
                     </button>
                 </div>
             </header>
-            <main 
-              class="max-w-7xl w-full mx-auto px-4 bg-gray-50">
+            <main class="max-w-7xl w-full mx-auto px-4 bg-gray-50">
                 <div
                     class="flex items-center justify-center md:justify-between gap-3 w-full md:w-auto mx-4 lg:mx-0"
                 >
@@ -149,7 +155,9 @@ onMounted(() => {
                         Nova Retirada
                     </button>
                 </div>
-                <div class="flex w-full my-8 items-center border-b border-gray-200">
+                <div
+                    class="flex w-full my-8 items-center border-b border-gray-200"
+                >
                     <button
                         @click="abaAtiva = 'inventario'"
                         class="px-4 py-3 w-full text-sm font-bold flex justify-center items-center gap-2 border-b-2 transition"
@@ -188,11 +196,23 @@ onMounted(() => {
                         />
                         Empréstimos
                     </button>
-                </div>
-        
-                <Inventario v-if="abaAtiva === 'inventario'"/>
 
+                    <button
+                        @click="abaAtiva = 'equipe'"
+                        class="px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition"
+                        :class="
+                            abaAtiva === 'equipe'
+                                ? 'border-red-600 text-red-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        "
+                    >
+                        <Users class="w-4 h-4" /> Efetivo
+                    </button>
+                </div>
+
+                <Inventario v-if="abaAtiva === 'inventario'" />
                 <ListaCautelas v-if="abaAtiva === 'emprestimos'" />
+                <ListaBombeiros v-if="abaAtiva === 'equipe'"/>
             </main>
             <NovaCautela
                 :estaAberto="estaAberto"

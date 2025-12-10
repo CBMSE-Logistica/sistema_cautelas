@@ -1,50 +1,43 @@
-import { ref, watch, type Ref } from 'vue';
-import { fuzzySearch } from '../utils/busca';
-import { debounce } from '../utils/debounce';
+import { ref, computed, type Ref } from 'vue'
 
-// Define o que o nosso Composable retorna para o componente
-interface UseBuscaResultado<T> {
-    termoBusca: Ref<string>; // Termo de busca
-    resultados: Ref<T[]>; // Lista de resultados
-    estaBuscando: Ref<boolean>; // Útil para mostrar um "carregando..."
+/**
+ * Remove acentos e deixa minúsculo para comparação justa.
+ * Ex: "João" -> "joao"
+ */
+function normalizarTexto(valor: any): string {
+    if (!valor) return ''
+    return String(valor)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
 }
 
-export function useBusca<T>(
-    dadosIniciais: Ref<T[]> | T[], // Aceita tanto um ref quanto um array puro
-    chaves: string[],
-    atraso = 300
-): UseBuscaResultado<T> {
-    // Normaliza para garantir que estamos lidando com um Ref
-    const data = ref(dadosIniciais) as Ref<T[]>;
+export function useBusca<T>(listaOriginal: Ref<T[]>, chaves: (keyof T)[]) {
+    
+    const termoBusca = ref('')
 
-    // Estado
-    const termoBusca = ref('');
-    const resultados = ref<T[]>(data.value) as Ref<T[]>; // Começa com a lista completa
-    const estaBuscando = ref(false);
+    const resultados = computed(() => {
+        // 1. Se não tiver termo digitado, retorna a lista completa
+        if (!termoBusca.value.trim()) {
+            return listaOriginal.value
+        }
 
-    // A função de busca "pesada" que será executada após o atraso
-    const realizarBusca = (termo: string) => {
-        resultados.value = fuzzySearch(data.value, termo, chaves);
-        estaBuscando.value = false;
-    };
+        const termoNormalizado = normalizarTexto(termoBusca.value)
 
-    // Cria a versão "debounced" da busca
-    const debouncedSearch = debounce(realizarBusca, atraso);
-
-    // Observa o que o usuário digita
-    watch(termoBusca, (novoTermo) => {
-        estaBuscando.value = true; // Ativa o loading imediatamente ao digitar
-        debouncedSearch(novoTermo); // Agenda a busca
-    });
-
-    // Opcional: Se a lista original mudar (ex: API retornou novos dados), atualizamos a busca
-    watch(data, () => {
-        realizarBusca(termoBusca.value);
-    });
+        // 2. Algoritmo de Busca Linear (Filter)
+        return listaOriginal.value.filter(item => {
+            // Verifica se ALGUMA das chaves (ex: nome, matricula) contém o termo
+            return chaves.some(chave => {
+                const valorItem = item[chave]
+                const valorNormalizado = normalizarTexto(valorItem)
+                
+                return valorNormalizado.includes(termoNormalizado)
+            })
+        })
+    })
 
     return {
         termoBusca,
         resultados,
-        estaBuscando,
-    };
+    }
 }

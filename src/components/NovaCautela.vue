@@ -33,9 +33,6 @@ const form = ref({
     observacoes: '',
 });
 
-// --- CONFIGURAÇÃO DOS DROPDOWNS (CORRIGIDO COM REACTIVE) ---
-
-// 1. Bombeiros: Envolvemos em reactive() para não precisar de .value no HTML
 const dropBombeiro = reactive(useDropdownSelect(
     listaBombeiros,
     ['nome', 'matricula', 'graduacao', 'cpf'],
@@ -61,7 +58,6 @@ const dropMaterial = reactive(useDropdownSelect(
 ));
 
 // --- AÇÕES ---
-
 function adicionarMaterialNaLista(m: Material) {
     itensSelecionados.value.push(m);
     dropMaterial.limpar();
@@ -108,8 +104,6 @@ watch(() => props.estaAberto, (aberto) => {
 
 // --- SALVAR ---
 async function confirmarCautela() {
-    // Acessa sem .value pois está dentro do reactive, mas o itemSelecionado interno ainda é ref
-    // O reactive desembrulha o primeiro nível.
     if (!dropBombeiro.itemSelecionado) {
         return alert('Selecione um bombeiro responsável!');
     }
