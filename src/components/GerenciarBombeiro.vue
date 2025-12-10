@@ -164,7 +164,7 @@ async function excluir() {
                 class="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50"
             >
                 <h2
-                    class="text-xl font-bold text-gray-800 flex items-center gap-2"
+                    class="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2"
                 >
                     <UserPlus class="w-6 h-6 text-red-700" />
                     {{ bombeiro ? 'Editar Dados' : 'Novo Bombeiro' }}
@@ -177,7 +177,7 @@ async function excluir() {
                 </button>
             </div>
 
-            <div class="p-6 overflow-y-auto flex-1 scrollbar-thin space-y-4">
+            <div class="p-6 overflow-y-auto flex-1 scrollbar-thin space-y-4 ">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1"
                         >Nome Completo</label
@@ -189,7 +189,7 @@ async function excluir() {
                         <input
                             v-model="form.nome"
                             type="text"
-                            class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none uppercase text-gray-800"
+                            class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none uppercase text-gray-800 text-sm md:text-1xl"
                             placeholder="NOME DE GUERRA"
                         />
                     </div>
@@ -203,12 +203,12 @@ async function excluir() {
                         >
                         <select
                             v-model="form.graduacao"
-                            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none bg-white text-gray-800"
+                            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none bg-white text-gray-800 text-sm md:text-1xl"
                         >
                             <option
                                 v-for="g in graduacoes"
                                 :value="g"
-                                class="p-8"
+                                class="p-8 text-sm md:text-1xl"
                             >
                                 {{ g }}
                             </option>
@@ -223,7 +223,7 @@ async function excluir() {
                             v-model="form.matricula"
                             type="text"
                             placeholder="00.000-0"
-                            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800"
+                            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800 text-sm md:text-1xl"
                         />
                     </div>
                 </div>
@@ -240,7 +240,7 @@ async function excluir() {
                             v-model="form.cpf"
                             @input="aplicarMascaraCPF"
                             type="text"
-                            class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800"
+                            class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800 text-sm md:text-1xl"
                             placeholder="000.000.000-00"
                         />
                     </div>
@@ -255,7 +255,7 @@ async function excluir() {
                         <input
                             v-model="form.unidade"
                             type="text"
-                            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800"
+                            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800 text-sm md:text-1xl"
                         />
                     </div>
                     <div>
@@ -271,13 +271,13 @@ async function excluir() {
                                 v-model="form.contato"
                                 type="text"
                                 placeholder="(DDD) 9xxxx-xxxx"
-                                class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800"
+                                class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800 text-sm md:text-1xl"
                             />
                         </div>
                     </div>
                 </div>
                 <div
-                    class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200 mt-2"
+                    class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200 mt-2 text-sm md:text-1xl"
                 >
                     <input
                         type="checkbox"

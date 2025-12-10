@@ -3,13 +3,7 @@ import { ref, onMounted } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useBusca } from '../composables/useBusca';
 import type { CatalogoEquipamento } from '../types';
-import {
-    Box,
-    RefreshCw,
-    Search,
-    PackageOpen,
-    Plus,
-} from 'lucide-vue-next';
+import { Box, RefreshCw, Search, PackageOpen, Plus } from 'lucide-vue-next';
 import GerenciarInventario from './GerenciarInventario.vue';
 
 // --- ESTADOS ---
@@ -19,10 +13,10 @@ const modalGestaoAberto = ref(false);
 const catalogoSelecionado = ref<CatalogoEquipamento | null>(null);
 
 // --- BUSCA INTELIGENTE ---
-const {
-    termoBusca,
-    resultados: catalogoFiltrado,
-} = useBusca(catalogoLista, ['nome', 'descricao']);
+const { termoBusca, resultados: catalogoFiltrado } = useBusca(catalogoLista, [
+    'nome',
+    'descricao',
+]);
 
 // --- FETCH DADOS ---
 async function buscarInventario() {
@@ -87,7 +81,7 @@ onMounted(() => {
 <template>
     <div class="animate-fade-in pb-8">
         <div
-            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 p-2"
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8"
         >
             <div class="w-full md:w-auto">
                 <h2
@@ -101,40 +95,42 @@ onMounted(() => {
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 w-full mt-4 md:w-auto">
-                <button
-                    @click="abrirNovoCadastro"
-                    class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition ml-2"
-                    title="Adicionar novo tipo de equipamento"
-                >
-                    <Plus class="w-4 h-4 text-white" /> Novo
-                </button>
-                <div class="relative w-full md:w-72 group">
-                    <Search
-                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-red-600 transition"
-                    />
+            <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto mt-4">
+                <div class="flex gap-2 w-full md:w-auto">
+                    <div class="relative w-full md:w-72 group">
+                        <Search
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-red-600 transition"
+                        />
 
-                    <input
-                        type="text"
-                        v-model="termoBusca"
-                        placeholder="Buscar no catálogo..."
-                        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-600/10 focus:border-red-600 outline-none transition shadow-sm text-gray-800"
-                    />
+                        <input
+                            type="text"
+                            v-model="termoBusca"
+                            placeholder="Buscar no catálogo..."
+                            class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-600/10 focus:border-red-600 outline-none transition shadow-sm text-gray-800"
+                        />
+                    </div>
+
+                    <button
+                        @click="buscarInventario"
+                        class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-red-600 hover:border-red-200 transition shadow-sm active:scale-95"
+                        title="Atualizar Lista"
+                    >
+                        <RefreshCw
+                            class="w-5 h-5"
+                            :class="{ 'animate-spin': carregando }"
+                        />
+                    </button>
                 </div>
 
                 <button
-                    @click="buscarInventario"
-                    class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-red-600 hover:border-red-200 transition shadow-sm"
-                    title="Atualizar Lista"
+                    @click="abrirNovoCadastro"
+                    class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition w-full md:w-auto active:scale-95"
                 >
-                    <RefreshCw
-                        class="w-5 h-5"
-                        :class="{ 'animate-spin': carregando }"
-                    />
+                    <Plus class="w-4 h-4" /> Novo Item
                 </button>
             </div>
         </div>
-
+        <hr class="text-gray-300 my-6">
         <div
             v-if="carregando"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"

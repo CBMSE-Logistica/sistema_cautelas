@@ -13,10 +13,12 @@ const modalAberto = ref(false);
 const bombeiroSelecionado = ref<Pessoa | null>(null);
 
 // Busca
-const {
-    termoBusca,
-    resultados: listaFiltrada,
-} = useBusca(listaBombeiros, ['graduacao' ,'nome', 'matricula', 'cpf']);
+const { termoBusca, resultados: listaFiltrada } = useBusca(listaBombeiros, [
+    'graduacao',
+    'nome',
+    'matricula',
+    'cpf',
+]);
 
 const emit = defineEmits(['refresh-plantonistas']);
 
@@ -57,50 +59,57 @@ onMounted(() => {
 <template>
     <div class="animate-fade-in">
         <div
-            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8"
+            class="flex flex-col md:flex-row justify-between items-start gap-4"
         >
-            <div>
-                <h2
-                    class="text-xl font-bold text-gray-800 flex items-center gap-2"
-                >
-                    <Users class="w-6 h-6 text-red-700" /> Efetivo
-                </h2>
-                <p class="text-sm text-gray-500">
-                    Gestão de militares cadastrados
-                </p>
-            </div>
-
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <button
-                    @click="abrirNovo"
-                    class="bg-gray-800 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-900 transition ml-2"
-                >
-                    <Plus class="w-4 h-4" /> Novo
-                </button>
-                <div class="relative w-full md:w-64 group">
-                    <Search
-                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                    />
-                    <input
-                        v-model="termoBusca"
-                        type="text"
-                        placeholder="Buscar bombeiro..."
-                        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-600/10 focus:border-red-600 outline-none transition text-gray-800"
-                    />
+            <div
+                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full"
+            >
+                <div class="px-2">
+                    <h2
+                        class="text-xl font-bold text-gray-800 flex items-center gap-2"
+                    >
+                        <Users class="w-6 h-6 text-red-700" /> Efetivo
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Gestão de militares cadastrados
+                    </p>
                 </div>
-                <button
-                    @click="buscarBombeiros"
-                    class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-red-600"
-                >
-                    <RefreshCw
-                        class="w-5 h-5"
-                        :class="{ 'animate-spin': carregando }"
-                    />
-                </button>
-                
+
+                <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <div class="relative w-full md:w-64 group">
+                            <Search
+                                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                            />
+                            <input
+                                v-model="termoBusca"
+                                type="text"
+                                placeholder="Buscar bombeiro..."
+                                class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-600/10 focus:border-red-600 outline-none transition text-gray-800"
+                            />
+                        </div>
+
+                        <button
+                            @click="buscarBombeiros"
+                            class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-red-600 active:scale-95 transition"
+                        >
+                            <RefreshCw
+                                class="w-5 h-5"
+                                :class="{ 'animate-spin': carregando }"
+                            />
+                        </button>
+                    </div>
+
+                    <button
+                        @click="abrirNovo"
+                        class="bg-gray-800 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-gray-900 transition w-full md:w-auto active:scale-95 shadow-sm"
+                    >
+                        <Plus class="w-4 h-4" /> Novo Bombeiro
+                    </button>
+                </div>
             </div>
         </div>
-
+        <hr class="text-gray-300 my-6">
         <div v-if="carregando" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div
                 v-for="i in 6"
@@ -111,7 +120,7 @@ onMounted(() => {
 
         <div
             v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8"
         >
             <div
                 v-for="b in listaFiltrada"

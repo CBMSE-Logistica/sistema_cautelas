@@ -234,7 +234,7 @@ useScrollLock(() => props.estaAberto);
 
             <div
                 v-else
-                class="p-6 overflow-y-auto flex-1 space-y-8 scrollbar-thin"
+                class="p-3 md:p-6 overflow-y-auto flex-1 space-y-8 scrollbar-thin"
             >
                 <div class="relative z-30">
                     <label class="block text-sm font-bold text-gray-800 mb-2"
@@ -333,7 +333,7 @@ useScrollLock(() => props.estaAberto);
                                     >
                                     <select
                                         v-model="item.estado_devolucao"
-                                        class="w-full sm:w-40 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 focus:ring-green-500 outline-none"
+                                        class="w-full sm:w-40 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs md:text-sm font-bold text-gray-700 focus:ring-2 focus:ring-green-500 outline-none"
                                         :class="{
                                             'text-green-700 bg-green-50 border-green-200':
                                                 item.estado_devolucao ===

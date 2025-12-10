@@ -17,7 +17,6 @@ import {
     Users,
     UserCog,
     ChevronDown,
-    
 } from 'lucide-vue-next';
 
 // Estado de sessão
@@ -174,7 +173,7 @@ onMounted(() => {
                 <hr class="md:hidden text-gray-200" />
 
                 <div class="flex flex-row gap-4">
-                    <div class="relative w-64 md:w-72 ">
+                    <div class="relative w-64 md:w-72">
                         <label
                             class="text-[10px] uppercase font-bold text-gray-400 ml-1"
                             >Plantonista Responsável</label
@@ -209,7 +208,8 @@ onMounted(() => {
                                     @mousedown.prevent="trocarPlantonista(p)"
                                     class="w-full text-left px-4 py-3 hover:bg-red-50 flex items-center justify-between border-b border-gray-50 last:border-0 transition"
                                 >
-                                    <span class="font-bold text-gray-700 text-sm"
+                                    <span
+                                        class="font-bold text-gray-700 text-sm"
                                         >{{ p.graduacao }} {{ p.nome }}</span
                                     >
                                     <span
@@ -231,11 +231,10 @@ onMounted(() => {
                         <LogOut class="w-4 h-4 md:w-5 md:h-5 text-gray-800" />
                     </button>
                 </div>
-
             </header>
             <main class="max-w-7xl w-full mx-auto px-4 bg-gray-50">
                 <div
-                    class="flex items-center justify-center md:justify-between gap-3 w-full md:w-auto mx-4 lg:mx-0"
+                    class="flex items-center justify-center md:justify-between gap-3 md:w-auto mx-2 lg:mx-0"
                 >
                     <button
                         @click="abrirModal"
@@ -243,6 +242,17 @@ onMounted(() => {
                     >
                         <Plus class="w-5 h-5" />
                         Nova Retirada
+                    </button>
+                    <button
+                        @click="abaAtiva = 'equipe'"
+                        class="flex-1 md:flex-none justify-center bg-white border border-gray-200 text-gray-700 hover:text-red-700 hover:border-red-200 px-4 py-2.5 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center gap-2 whitespace-nowrap w"
+                        :class="{
+                            'ring-2 ring-red-100 border-red-200 text-red-700':
+                                abaAtiva === 'equipe',
+                        }"
+                    >
+                        <Users class="w-5 h-5" />
+                        Gerenciar Efetivo
                     </button>
                 </div>
                 <div
@@ -287,22 +297,12 @@ onMounted(() => {
                         Empréstimos
                     </button>
 
-                    <button
-                        @click="abaAtiva = 'equipe'"
-                        class="px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition"
-                        :class="
-                            abaAtiva === 'equipe'
-                                ? 'border-red-600 text-red-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        "
-                    >
-                        <Users class="w-4 h-4" /> Efetivo
-                    </button>
                 </div>
 
                 <Inventario v-if="abaAtiva === 'inventario'" />
                 <ListaCautelas v-if="abaAtiva === 'emprestimos'" />
-                <ListaBombeiros v-if="abaAtiva === 'equipe'" 
+                <ListaBombeiros
+                    v-if="abaAtiva === 'equipe'"
                     @refresh-plantonistas="carregarPlantonistas"
                 />
             </main>
