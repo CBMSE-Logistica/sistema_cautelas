@@ -22,9 +22,6 @@ async function handleLogin() {
         carregando.value = false;
     }
 }
-
-const debugUrl = import.meta.env.VITE_SUPABASE_URL
-const debugKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 </script>
 
 <template>
@@ -108,20 +105,6 @@ const debugKey = import.meta.env.VITE_SUPABASE_ANON_KEY
                     Sistema de Controle de Cautelas v1.0
                 </p>
             </div>
-        </div>
-        <div
-            class="mt-4 p-4 bg-black text-green-400 font-mono text-xs break-all opacity-80"
-        >
-            <p><strong>DEBUG DEPLOY:</strong></p>
-            <p>URL Lida: {{ debugUrl }}</p>
-            <p>
-                Status Chave:
-                {{
-                    debugKey
-                        ? 'OK (' + debugKey.substring(0, 10) + '...)'
-                        : 'VAZIA/UNDEFINED'
-                }}
-            </p>
         </div>
     </div>
 </template>
