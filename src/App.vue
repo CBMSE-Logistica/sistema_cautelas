@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import { supabaseClient } from './supabase/supabaseClient';
 import NovaCautela from './components/NovaCautela.vue';
 import ListaCautelas from './components/ListaCautelas.vue';
 import Login from './components/Login.vue';
 import Inventario from './components/Inventario.vue';
 import ListaBombeiros from './components/ListaBombeiros.vue';
+import { usePlantonista } from './composables/usePlantonista';
+import { useDropdownSelect } from './composables/useDropdownSelect';
+import type { Pessoa } from './types';
 import {
     Plus,
     LayoutGrid,
     ClipboardList,
     LogOut,
     Users,
+    UserCog,
+    ChevronDown,
+    
 } from 'lucide-vue-next';
 
 // Estado de sessão
@@ -23,6 +29,12 @@ let authSubscription: any = null;
 // Estados
 const estaAberto = ref(false);
 const abaAtiva = ref<'inventario' | 'emprestimos' | 'equipe'>('inventario');
+
+// Setup de Plantonista
+const { plantonistaAtual, definirPlantonista, recuperarPlantonista } =
+    usePlantonista();
+
+const listaPlantonistas = ref<Pessoa[]>([]);
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
 async function verificarUsuario() {
@@ -63,6 +75,32 @@ async function handleLogout() {
 }
 // -----
 
+// Configura o Dropdown do Header
+const dropHeader = reactive(
+    useDropdownSelect(
+        listaPlantonistas,
+        ['nome', 'graduacao'],
+        (p) => `${p.graduacao} ${p.nome}`
+    )
+);
+
+// Busca APENAS os plantonistas autorizados
+async function carregarPlantonistas() {
+    const { data } = await supabaseClient
+        .from('pessoa')
+        .select('*')
+        .eq('eh_plantonista', true)
+        .order('nome');
+
+    if (data) listaPlantonistas.value = data;
+}
+
+// Ao selecionar no dropdown, salva no global
+function trocarPlantonista(p: Pessoa) {
+    definirPlantonista(p);
+    dropHeader.selecionar(p);
+}
+
 // --- CONTROLE DO MODAL ---
 function abrirModal() {
     estaAberto.value = true;
@@ -84,6 +122,13 @@ onUnmounted(() => {
 
 onMounted(() => {
     verificarUsuario();
+    carregarPlantonistas();
+    recuperarPlantonista();
+
+    if (plantonistaAtual.value) {
+        dropHeader.termoBusca = `${plantonistaAtual.value.graduacao} ${plantonistaAtual.value.nome}`;
+        dropHeader.itemSelecionado = plantonistaAtual.value;
+    }
 });
 </script>
 
@@ -127,21 +172,66 @@ onMounted(() => {
                     </div>
                 </div>
                 <hr class="md:hidden text-gray-200" />
-                <div
-                    class="text-gray-500 text-sm flex justify-between items-center gap-8 px-2"
-                >
-                    <span class="flex flex-col"
-                        >Plantonista:
-                        <b class="text-gray-800">{{ usuarioEmail }}</b>
-                    </span>
+
+                <div class="flex flex-row gap-4">
+                    <div class="relative w-64 md:w-72 ">
+                        <label
+                            class="text-[10px] uppercase font-bold text-gray-400 ml-1"
+                            >Plantonista Responsável</label
+                        >
+                        <div class="relative group">
+                            <UserCog
+                                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-700"
+                            />
+                            <input
+                                type="text"
+                                v-model="dropHeader.termoBusca"
+                                @focus="dropHeader.abrir"
+                                @blur="dropHeader.fecharComDelay"
+                                @click="dropHeader.abrir"
+                                placeholder="Selecione seu nome..."
+                                class="w-full pl-9 pr-8 py-2 bg-white border-2 border-transparent hover:border-gray-200 focus:border-red-600 rounded-lg text-sm font-bold text-gray-800 outline-none transition cursor-pointer shadow-sm"
+                                readonly
+                            />
+                            <ChevronDown
+                                class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                            />
+                            <div
+                                v-if="
+                                    dropHeader.estaAberto &&
+                                    listaPlantonistas.length
+                                "
+                                class="absolute z-50 mt-1 w-full bg-white shadow-xl border border-gray-100 rounded-xl overflow-hidden animate-fade-in"
+                            >
+                                <button
+                                    v-for="p in listaPlantonistas"
+                                    :key="p.id_pessoa"
+                                    @mousedown.prevent="trocarPlantonista(p)"
+                                    class="w-full text-left px-4 py-3 hover:bg-red-50 flex items-center justify-between border-b border-gray-50 last:border-0 transition"
+                                >
+                                    <span class="font-bold text-gray-700 text-sm"
+                                        >{{ p.graduacao }} {{ p.nome }}</span
+                                    >
+                                    <span
+                                        v-if="
+                                            plantonistaAtual?.id_pessoa ===
+                                            p.id_pessoa
+                                        "
+                                        class="w-2 h-2 rounded-full bg-green-500"
+                                    ></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <button
                         @click="handleLogout"
-                        class="bg-white border border-gray-200 text-gray-600 hover:text-red-700 hover:border-red-200 p-2.5 rounded-xl transition shadow-sm"
+                        class="bg-white border border-gray-200 text-gray-600 hover:text-red-700 hover:border-red-200 p-2.5 rounded-xl transition shadow-sm h-fit mt-auto"
                         title="Sair do Sistema"
                     >
                         <LogOut class="w-4 h-4 md:w-5 md:h-5 text-gray-800" />
                     </button>
                 </div>
+
             </header>
             <main class="max-w-7xl w-full mx-auto px-4 bg-gray-50">
                 <div
@@ -212,7 +302,9 @@ onMounted(() => {
 
                 <Inventario v-if="abaAtiva === 'inventario'" />
                 <ListaCautelas v-if="abaAtiva === 'emprestimos'" />
-                <ListaBombeiros v-if="abaAtiva === 'equipe'"/>
+                <ListaBombeiros v-if="abaAtiva === 'equipe'" 
+                    @refresh-plantonistas="carregarPlantonistas"
+                />
             </main>
             <NovaCautela
                 :estaAberto="estaAberto"

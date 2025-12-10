@@ -30,6 +30,7 @@ const form = ref({
     graduacao: 'Soldado', // Padrão
     unidade: '1º GBM', // Padrão
     contato: '',
+    eh_plantonista: false,
 });
 
 // Opções de Patente (Para evitar erros de digitação)
@@ -65,6 +66,7 @@ watch(
                     graduacao: 'Soldado',
                     unidade: '1º GBM',
                     contato: '',
+                    eh_plantonista: false,
                 };
             }
         }
@@ -203,7 +205,11 @@ async function excluir() {
                             v-model="form.graduacao"
                             class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none bg-white text-gray-800"
                         >
-                            <option v-for="g in graduacoes" :value="g" class="p-8">
+                            <option
+                                v-for="g in graduacoes"
+                                :value="g"
+                                class="p-8"
+                            >
                                 {{ g }}
                             </option>
                         </select>
@@ -216,6 +222,7 @@ async function excluir() {
                         <input
                             v-model="form.matricula"
                             type="text"
+                            placeholder="00.000-0"
                             class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800"
                         />
                     </div>
@@ -263,10 +270,27 @@ async function excluir() {
                             <input
                                 v-model="form.contato"
                                 type="text"
+                                placeholder="(DDD) 9xxxx-xxxx"
                                 class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800"
                             />
                         </div>
                     </div>
+                </div>
+                <div
+                    class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200 mt-2"
+                >
+                    <input
+                        type="checkbox"
+                        id="chk-plantonista"
+                        v-model="form.eh_plantonista"
+                        class="w-5 h-5 text-red-600 rounded focus:ring-red-500"
+                    />
+                    <label
+                        for="chk-plantonista"
+                        class="text-sm font-bold text-gray-700 cursor-pointer"
+                    >
+                        Permitir atuar como Plantonista (RTO)?
+                    </label>
                 </div>
             </div>
 

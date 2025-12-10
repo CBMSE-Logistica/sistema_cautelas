@@ -29,6 +29,7 @@ export interface Pessoa {
   graduacao: string
   unidade: string
   contato: string
+  eh_plantonista: boolean
 }
 
 export interface Material {

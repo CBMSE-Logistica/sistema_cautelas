@@ -60,7 +60,6 @@ const opcoesEstado: EstadoConservacao[] = [
 const {
     termoBusca: queryBombeiro,
     resultados: filteredBombeiros,
-    estaBuscando: buscandoBombeiro,
 } = useBusca(listaBombeiros, ['nome', 'matricula', 'graduacao']);
 
 // --- CARREGAR DADOS ---
@@ -243,12 +242,7 @@ useScrollLock(() => props.estaAberto);
                     >
                     <div class="relative">
                         <Search
-                            v-if="!buscandoBombeiro"
                             class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                        />
-                        <Loader2
-                            v-else
-                            class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-green-600 animate-spin"
                         />
 
                         <input

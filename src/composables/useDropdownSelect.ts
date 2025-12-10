@@ -10,11 +10,11 @@ import { useBusca } from './useBusca'
  */
 export function useDropdownSelect<T>(
   listaDados: Ref<T[]>,
-  chavesBusca: string[],
+  chavesBusca: (keyof T)[],
   formatarLabel: (item: T) => string
 ) {
   // 1. Reutiliza o useBusca internamente para filtrar a lista
-  const { termoBusca, resultados, estaBuscando } = useBusca(listaDados, chavesBusca)
+  const { termoBusca, resultados } = useBusca(listaDados, chavesBusca)
 
   // 2. Estados de Controle de UI
   const estaAberto = ref(false)
@@ -65,7 +65,6 @@ export function useDropdownSelect<T>(
     itemSelecionado, // Use para pegar o ID ao salvar
     
     // Estados
-    estaBuscando,    // Para mostrar spinner de loading
     estaAberto,      // Para mostrar/esconder a div da lista
 
     // Ações

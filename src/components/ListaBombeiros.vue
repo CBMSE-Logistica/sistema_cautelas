@@ -18,6 +18,8 @@ const {
     resultados: listaFiltrada,
 } = useBusca(listaBombeiros, ['graduacao' ,'nome', 'matricula', 'cpf']);
 
+const emit = defineEmits(['refresh-plantonistas']);
+
 // Fetch
 async function buscarBombeiros() {
     carregando.value = true;
@@ -40,6 +42,11 @@ function abrirEdicao(b: Pessoa) {
 }
 function fecharModal() {
     modalAberto.value = false;
+}
+
+function aoSalvarBombeiro() {
+    buscarBombeiros();
+    emit('refresh-plantonistas');
 }
 
 onMounted(() => {
@@ -135,7 +142,7 @@ onMounted(() => {
             :estaAberto="modalAberto"
             :fecharModal="fecharModal"
             :bombeiro="bombeiroSelecionado"
-            @atualizarLista="buscarBombeiros"
+            @atualizarLista="aoSalvarBombeiro"
         />
     </div>
 </template>

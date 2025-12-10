@@ -3,10 +3,12 @@ import { ref, computed, watch, reactive } from 'vue'; // <--- reactive importado
 import { supabaseClient } from '../supabase/supabaseClient';
 import { useDropdownSelect } from '../composables/useDropdownSelect';
 import { useScrollLock } from '../composables/useScrollLock';
+import { usePlantonista } from '../composables/usePlantonista';
 import type { Material, Pessoa, StatusCautela } from '../types';
 import {
-    X, ShieldAlert, Search, Calendar, User, Trash2,
-    CheckCircle2, AlertTriangle, Loader2, PackageOpen
+    X, ShieldAlert, Search, Calendar, Trash2,
+    CheckCircle2, AlertTriangle, Loader2, PackageOpen,
+    UserCog
 } from 'lucide-vue-next';
 
 // --- PROPS ---
@@ -26,6 +28,7 @@ const dataInputRef = ref<HTMLInputElement | null>(null);
 const listaBombeiros = ref<Pessoa[]>([]);
 const listaMateriais = ref<Material[]>([]);
 const itensSelecionados = ref<Material[]>([]);
+const { plantonistaAtual } = usePlantonista(); 
 
 const form = ref({
     dataDevolucao: '',
@@ -117,6 +120,10 @@ async function confirmarCautela() {
         return alert('Descreva o motivo/missão da cautela');
     }
 
+    if (!plantonistaAtual.value) {
+        return alert("Selecione quem é o Plantonista lá no topo da página (Header)!")
+    }
+
     salvando.value = true;
 
     try {
@@ -124,7 +131,7 @@ async function confirmarCautela() {
         
         const novaCautela = {
             fk_id_pessoa_responsavel: dropBombeiro.itemSelecionado.id_pessoa,
-            plantonista_rto: props.usuarioLogado,
+            plantonista_rto: `${plantonistaAtual.value.graduacao} ${plantonistaAtual.value.nome}`,
             motivo_cautela: form.value.motivo,
             data_previsao_devolucao: form.value.dataDevolucao,
             status: statusInicial,
@@ -204,10 +211,8 @@ useScrollLock(() => props.estaAberto);
                 <div class="relative z-30">
                     <label class="block text-sm font-bold text-gray-800 mb-2">Bombeiro Responsável <span class="text-red-500">*</span></label>
                     <div class="relative">
-                        <div v-if="dropBombeiro.estaBuscando" class="absolute left-4 top-1/2 -translate-y-1/2">
-                            <Loader2 class="w-4 h-4 text-red-600 animate-spin" />
-                        </div>
-                        <Search v-else class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        
+                        <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 
                         <input
                             type="text"
@@ -240,10 +245,8 @@ useScrollLock(() => props.estaAberto);
                 <div class="relative z-20">
                     <label class="block text-sm font-bold text-gray-800 mb-2">Adicionar Equipamentos <span class="text-red-500">*</span></label>
                     <div class="relative mb-3">
-                        <div v-if="dropMaterial.estaBuscando" class="absolute left-4 top-1/2 -translate-y-1/2">
-                            <Loader2 class="w-4 h-4 text-green-600 animate-spin" />
-                        </div>
-                        <PackageOpen v-else class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        
+                        <PackageOpen class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 
                         <input
                             id="input-material"
@@ -305,9 +308,13 @@ useScrollLock(() => props.estaAberto);
                     <div>
                         <label class="block text-sm font-bold text-gray-800 mb-2">Plantonista</label>
                         <div class="relative">
-                            <User class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input type="text" :value="usuarioLogado" disabled class="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-xl outline-none text-sm text-gray-500 cursor-not-allowed" />
+                            <UserCog class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input type="text" 
+                            :value="plantonistaAtual ? `${plantonistaAtual.graduacao} ${plantonistaAtual.nome}` : 'Ninguém selecionado no topo'" 
+                            disabled 
+                            class="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-xl outline-none text-sm text-gray-500 cursor-not-allowed" />
                         </div>
+                        <p class="text-[10px] text-gray-400 mt-1 ml-1">Para alterar, mude no topo da página.</p>
                     </div>
                 </div>
 
