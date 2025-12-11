@@ -295,12 +295,12 @@ async function excluir() {
             </div>
 
             <div
-                class="p-5 border-t border-gray-100 bg-gray-50 flex justify-between gap-3"
+                class="p-5 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between gap-3"
             >
                 <button
                     v-if="bombeiro"
                     @click="excluir"
-                    class="text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition"
+                    class="text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition w-full md:w-fit justify-center bg-gray-100 md:bg-transparent"
                 >
                     <Trash2 class="w-4 h-4" /> Excluir
                 </button>
@@ -308,7 +308,7 @@ async function excluir() {
                 <div class="flex gap-3">
                     <button
                         @click="fecharModal"
-                        class="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition"
+                        class="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition w-full md:w-fit justify-center"
                         :disabled="salvando"
                     >
                         Cancelar
@@ -316,7 +316,7 @@ async function excluir() {
                     <button
                         @click="salvar"
                         :disabled="salvando"
-                        class="bg-red-700 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-800 transition shadow-lg flex items-center gap-2"
+                        class="bg-red-700 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-800 transition shadow-lg flex items-center gap-2 w-full md:w-fit justify-center"
                     >
                         <Save class="w-4 h-4" />
                         {{ salvando ? 'Salvando...' : 'Salvar' }}

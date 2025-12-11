@@ -75,6 +75,8 @@ async function carregarCautelas() {
     carregando.value = false;
 }
 
+defineExpose({carregarCautelas});
+
 function abrirDevolucao(c: any) {
     cautelaParaDevolver.value = c;
     modalDevolucaoAberto.value = true;

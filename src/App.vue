@@ -28,6 +28,7 @@ let authSubscription: any = null;
 // Estados
 const estaAberto = ref(false);
 const abaAtiva = ref<'inventario' | 'emprestimos' | 'equipe'>('inventario');
+const listaCautelasRef = ref<any>(null);
 
 // Setup de Plantonista
 const { plantonistaAtual, definirPlantonista, recuperarPlantonista } =
@@ -109,6 +110,10 @@ function fecharModal() {
 }
 
 function onCautelaCriada() {
+    if (abaAtiva.value === 'emprestimos') {
+        listaCautelasRef.value?.carregarCautelas()
+    }
+
     abaAtiva.value = 'emprestimos';
 }
 // ------
@@ -245,7 +250,7 @@ onMounted(() => {
                     </button>
                     <button
                         @click="abaAtiva = 'equipe'"
-                        class="flex-1 md:flex-none justify-center bg-white border border-gray-200 text-gray-700 hover:text-red-700 hover:border-red-200 px-4 py-2.5 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center gap-2 whitespace-nowrap w"
+                        class="flex-1 md:flex-none justify-center bg-white border border-gray-200 text-gray-700 hover:text-red-700 hover:border-red-200 px-4 py-2.5 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center gap-2 whitespace-nowrap w-fit"
                         :class="{
                             'ring-2 ring-red-100 border-red-200 text-red-700':
                                 abaAtiva === 'equipe',
@@ -300,7 +305,10 @@ onMounted(() => {
                 </div>
 
                 <Inventario v-if="abaAtiva === 'inventario'" />
-                <ListaCautelas v-if="abaAtiva === 'emprestimos'" />
+                <ListaCautelas 
+                    v-if="abaAtiva === 'emprestimos'"
+                    ref="listaCautelasRef" 
+                />
                 <ListaBombeiros
                     v-if="abaAtiva === 'equipe'"
                     @refresh-plantonistas="carregarPlantonistas"
