@@ -189,7 +189,7 @@ async function excluir() {
                         <input
                             v-model="form.nome"
                             type="text"
-                            class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none uppercase text-gray-800 text-sm md:text-1xl"
+                            class="w-full pl-10 p-3 border rounded-xl focus:ring-2 focus:ring-red-600/20 outline-none text-gray-800 text-sm md:text-1xl"
                             placeholder="NOME DE GUERRA"
                         />
                     </div>

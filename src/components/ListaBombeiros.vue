@@ -119,6 +119,23 @@ onMounted(() => {
         </div>
 
         <div
+            v-else-if="listaFiltrada.length === 0"
+            class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200"
+        >
+            <div
+                class="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+                <Search class="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 class="text-lg font-bold text-gray-700">
+                Nenhum militar cadastrado.
+            </h3>
+            <p class="text-gray-400 text-sm">
+                Adicione militares no botão "Novo Bombeiro".
+            </p>
+        </div>
+
+        <div
             v-else
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8"
         >
