@@ -7,7 +7,7 @@ const plantonistaAtual = ref<Pessoa | null>(null)
 export function usePlantonista() {
   
   // Salva no LocalStorage para não perder se der F5
-  const definirPlantonista = (p: Pessoa) => {
+  const definirPlantonista = (p: Pessoa | null) => {
     plantonistaAtual.value = p
     localStorage.setItem('plantonista_ativo', JSON.stringify(p))
   }

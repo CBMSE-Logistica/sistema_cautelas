@@ -92,7 +92,24 @@ async function carregarPlantonistas() {
         .eq('eh_plantonista', true)
         .order('nome');
 
-    if (data) listaPlantonistas.value = data;
+    if (data) {
+        listaPlantonistas.value = data;
+
+        if (plantonistaAtual.value) {
+            // Verifica se ele ainda existe na nova lista (ou se foi excluído/rebaixado)
+            const aindaExiste = data.find(p => p.id_pessoa === plantonistaAtual.value?.id_pessoa);
+
+            if (!aindaExiste) {
+                // SE ELE SUMIU: Limpa o campo do Header
+                dropHeader.limpar(); // Limpa visualmente o input
+                definirPlantonista(null); // Limpa do estado global/localStorage
+            } else {
+                // SE ELE AINDA EXISTE: Atualiza os dados (caso tenha mudado de patente)
+                definirPlantonista(aindaExiste);
+                dropHeader.termoBusca = `${aindaExiste.graduacao} ${aindaExiste.nome}`;
+            }
+        }
+    }
 }
 
 // Ao selecionar no dropdown, salva no global
