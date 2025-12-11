@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import { supabaseClient } from './supabase/supabaseClient';
 import NovaCautela from './components/NovaCautela.vue';
 import ListaCautelas from './components/ListaCautelas.vue';
-import Login from './components/Login.vue';
+//import Login from './components/Login.vue';
 import Inventario from './components/Inventario.vue';
 import ListaBombeiros from './components/ListaBombeiros.vue';
 import { usePlantonista } from './composables/usePlantonista';
@@ -143,9 +143,9 @@ onMounted(() => {
     </div>
 
     <div v-else>
-        <Login v-if="!sessao" />
+        <!-- <Login v-if="!sessao" /> -->
 
-        <div v-else class="min-h-screen bg-gray-50 font-inter">
+        <div class="min-h-screen bg-gray-50 font-inter">
             <header
                 class="w-full py-4 px-4 md:px-16 mb-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-4 bg-white shadow-md justify-between"
             >
