@@ -1,6 +1,11 @@
 # Sistema de Cautelas - CBMSE
 
-Aplicação desenvolvida para modernizar e otimizar o controle de cautelas e gestão de inventário de equipamentos do Corpo de Bombeiros Militar de Sergipe. 
+<p align="center">
+  <img src="src/assets/visao-geral-de-inventario.png" alt="Visão Geral de Inventário">
+  <img src="src/assets/gestao-de-cautelas.png"  alt="Gestão de Cautelas">
+</p>
+
+Este projeto é uma aplicação web desenvolvida para gerenciar o empréstimo de materiais e equipamentos entre bombeiros do Corpo de Bombeiros Militar de Sergipe (CBMSE). Ele serve como uma ferramenta centralizada para registrar empréstimos de materiais, acompanhar prazos de devolução, gerenciar o inventário de equipamentos e controlar protocolos de vistoria. O sistema foi projetado para substituir processos manuais, reduzindo erros e melhorando a eficiência na gestão de recursos.
 
 O projeto foi desenvolvido com as seguintes tecnologias:
 
