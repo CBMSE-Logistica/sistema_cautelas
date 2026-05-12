@@ -5,6 +5,9 @@ import { useBusca } from '../composables/useBusca';
 import type { Pessoa } from '../types';
 import { Users, Search, Plus, RefreshCw, User } from 'lucide-vue-next';
 import GerenciarBombeiro from './GerenciarBombeiro.vue';
+import { mockPessoas } from '../mocks/mockData';
+
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 // Estados
 const carregando = ref(true);
@@ -25,6 +28,14 @@ const emit = defineEmits(['refresh-plantonistas']);
 // Fetch
 async function buscarBombeiros() {
     carregando.value = true;
+
+    if (USE_MOCK) {
+        await new Promise(r => setTimeout(r, 500));
+        listaBombeiros.value = mockPessoas;
+        carregando.value = false;
+        return;
+    }
+
     const { data, error } = await supabaseClient
         .from('pessoa')
         .select('*')

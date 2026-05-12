@@ -3,6 +3,9 @@ import { ref, onMounted, computed } from 'vue';
 import { supabaseClient } from '../supabase/supabaseClient';
 import type { Cautela } from '../types';
 import DevolucaoCautela from './DevolucaoCautela.vue';
+import { mockCautelas } from '../mocks/mockData';
+
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 import {
     Clock,
     Calendar,
@@ -34,6 +37,13 @@ const cautelaParaDevolver = ref<Cautela | null>(null);
 async function carregarCautelas() {
     carregando.value = true;
 
+    if (USE_MOCK) {
+        await new Promise(r => setTimeout(r, 700));
+        cautelas.value = mockCautelas;
+        carregando.value = false;
+        return;
+    }
+
     const { data, error } = await supabaseClient
         .from('cautela')
         .select(
@@ -63,7 +73,7 @@ async function carregarCautelas() {
             motivo_cautela: c.motivo_cautela,
             plantonista_rto: c.plantonista_rto,
             responsavel: c.pessoa,
-            created_at: c.created_at, // Importante para filtro de data
+            created_at: c.created_at,
             data_devolucao_real: c.devolucao?.[0]?.data_hora_devolucao,
             itens: c.itens?.map((i: any) => ({
                 ...i.material,

@@ -5,6 +5,9 @@ import { useBusca } from '../composables/useBusca';
 import type { CatalogoEquipamento } from '../types';
 import { Box, RefreshCw, Search, PackageOpen, Plus } from 'lucide-vue-next';
 import GerenciarInventario from './GerenciarInventario.vue';
+import { mockCatalogo } from '../mocks/mockData';
+
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 // --- ESTADOS ---
 const carregando = ref(true);
@@ -21,6 +24,14 @@ const { termoBusca, resultados: catalogoFiltrado } = useBusca(catalogoLista, [
 // --- FETCH DADOS ---
 async function buscarInventario() {
     carregando.value = true;
+
+    if (USE_MOCK) {
+        // Simula delay de rede
+        await new Promise(r => setTimeout(r, 600));
+        catalogoLista.value = mockCatalogo;
+        carregando.value = false;
+        return;
+    }
 
     // Busca o Catálogo e faz a contagem dos materiais vinculados
     const { data, error } = await supabaseClient
